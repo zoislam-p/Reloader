@@ -23,3 +23,6 @@ test/loadtest/loadtest
 # Temporary NFS files
 .nfs*
 *.test
+
+# Microsoft Word temporary lock files
+~$*.docx

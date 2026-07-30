@@ -1,0 +1,9 @@
+# Local-only Helm override for the image built as reloader-local:ubi9.
+# Use a registry-reachable image and IfNotPresent for Rancher/RKE2.
+image:
+  repository: reloader-local
+  tag: ubi9
+  pullPolicy: Never
+
+reloader:
+  watchGlobally: true

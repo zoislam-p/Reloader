@@ -1,0 +1,110 @@
+Reloader UBI9 local validation evidence
+Date: 2026-07-30
+Branch: feature/ubi9-reloader-migration
+Source commit tested: b1263fe6c22a5699e4262e5b79af5823062334d9
+
+IMAGE BUILD
+-----------
+AMD64 source image:
+  id=sha256:bfc2178796c861694729ec3a6e95cdddf7d797cd473f723655fc5446feb1b869
+  os=linux
+  architecture=amd64
+  result=PASS
+
+UBI9 runtime image:
+  id=sha256:78803fd6206fdbaa5fde4a6ad00cfb5e4c2f9c5654eb8d1e2a75c7d4965ba484
+  os=linux
+  architecture=amd64
+  configuredUser=65532:65532
+  entrypoint=["/manager"]
+  exposedPorts={"9090/tcp":{}}
+  size=65967594
+  result=PASS
+
+IMAGE VERIFICATION SCRIPT
+-------------------------
+Command:
+  IMAGE=reloader-local:ubi9 EXPECTED_PLATFORM=linux/amd64 \
+    bash hack/verify-ubi9-image.sh
+
+Result:
+  PASS: reloader-local:ubi9
+  platform=linux/amd64
+  imageUser=65532:65532
+  entrypoint=["/manager"]
+  release=Red Hat Enterprise Linux release 9.8 (Plow)
+  binary=ELF 64-bit LSB executable, x86-64, statically linked
+
+RPM evidence:
+  /var/lib/rpm/rpmdb.sqlite
+
+HELM
+----
+Command:
+  helm lint deployments/kubernetes/chart/reloader
+
+Result:
+  1 chart(s) linted, 0 chart(s) failed
+
+Rendered values:
+  image: reloader-local:ubi9
+  imagePullPolicy: Never
+  runAsNonRoot: true
+  runAsUser: 65534
+
+Helm release:
+  name=reloader
+  namespace=reloader
+  status=deployed
+  revision=1
+
+KUBERNETES
+----------
+Minikube profile:
+  name=reloader-ubi9
+  host=Running
+  kubelet=Running
+  apiserver=Running
+
+Reloader workload:
+  deployment=reloader-reloader
+  ready=1/1
+  image=reloader-local:ubi9
+  pod=reloader-reloader-85cb84d69d-vtdr7
+  podStatus=Running
+  restarts=0
+
+FUNCTIONAL TEST
+---------------
+Initial:
+  pod=reloader-test-app-665dcb8d44-hhf8n
+  deploymentRevision=1
+
+After ConfigMap update:
+  pod=reloader-test-app-689b9b69d6-6qqx9
+  deploymentRevision=2
+
+Controller log:
+  Changes detected in 'reloader-test-config' of type 'CONFIGMAP' in namespace
+  'reloader-test'; updated 'reloader-test-app' of type 'Deployment' in namespace
+  'reloader-test'
+
+Reusable script rerun:
+  result=PASS
+  initialPod=reloader-test-app-5c5bf44869-4qwrc
+  newPod=reloader-test-app-74c9d5787f-5nrfr
+  initialRevision=3
+  newRevision=4
+
+WARNINGS AND LIMITATIONS
+------------------------
+1. Docker host and Minikube node were ARM64. The target AMD64 image ran through
+   Docker Desktop cross-platform emulation. Native AMD64 node testing remains.
+2. The first final-image attempt could not resolve a Docker-local builder image.
+   The successful test used a localhost-only registry and explicitly supplied
+   BUILDPLATFORM=linux/amd64.
+3. Dockerfile.ubi emitted non-failing warnings for uppercase stage name SRC and
+   a required BUILDER_IMAGE with no valid default.
+4. Go unit tests were not run because the Go CLI was unavailable locally.
+5. SPS, IBM registry, SBOM, vulnerability, malware, signing, provenance, and
+   Rancher/RKE2 validation were not available in the local environment.
