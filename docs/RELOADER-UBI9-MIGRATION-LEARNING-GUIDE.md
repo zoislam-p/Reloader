@@ -9,7 +9,7 @@ Reviewed revision: `b1733c54f9d1a0ac3f47195302d96bdc237f043d`
 ## 1. Purpose
 
 This guide explains how to evaluate and implement the Reloader UBI9 image
-migration using the same disciplined approach used for OCM:
+migration using a disciplined, evidence-based approach:
 
 1. understand the upstream project;
 2. preserve original files;
@@ -21,8 +21,8 @@ migration using the same disciplined approach used for OCM:
 8. validate real Reloader behavior; and
 9. record evidence, decisions, and blockers.
 
-This is a learning guide. Do not copy OCM changes without checking how
-Reloader already works.
+This is a learning guide. Understand how Reloader already works before making
+changes.
 
 ## 2. What Reloader does
 
@@ -42,15 +42,14 @@ Typical flow:
 Reloader is the application/controller. It is not installed through a separate
 Kubernetes operator.
 
-## 3. Important difference from OCM
+## 3. Reloader project structure
 
-OCM contained five component images and two operator-driven Helm charts.
-Reloader is simpler:
+Reloader has a focused controller architecture:
 
 - one primary image: `reloader`;
 - one controller Deployment;
 - one existing Helm chart;
-- no ClusterManager/Klusterlet operator flow; and
+- no separate Kubernetes operator installation; and
 - no CRD is required for its basic annotation-driven behavior.
 
 Upstream Reloader already contains:
@@ -173,7 +172,7 @@ Before editing, answer:
 ### Minimal-change rule
 
 Keep upstream logic whenever it already meets the requirement. Do not replace
-the existing UBI packaging design merely because OCM used a different layout.
+the existing UBI packaging design without an approved technical reason.
 
 If a strict UBI runtime is required, the likely design is:
 
@@ -396,8 +395,8 @@ For Rancher:
 5. run the ConfigMap rollout test; and
 6. save evidence.
 
-Unlike OCM, Reloader does not need a hub cluster, managed cluster, bootstrap
-kubeconfig, ClusterManager, or Klusterlet.
+Reloader is installed directly into the target Kubernetes cluster as a
+controller Deployment. No separate multicluster bootstrap flow is required.
 
 ## 14. Files likely to change
 
@@ -455,7 +454,7 @@ Never claim a production release based only on local validation.
 ## 17. Common mistakes to avoid
 
 - Replacing the existing UBI design without confirming acceptance criteria.
-- Treating Reloader like OCM with multiple operators and clusters.
+- Inventing unnecessary operators, images, or multicluster installation steps.
 - Creating a new Helm chart when one already exists.
 - Using a local-only image name on Rancher.
 - Using `imagePullPolicy: Never` on remote RKE2 nodes.
@@ -526,4 +525,3 @@ Blockers:
 - Reloader documentation: <https://docs.stakater.com/reloader/>
 - Helm chart:
   <https://github.com/stakater/Reloader/tree/master/deployments/kubernetes/chart/reloader>
-
